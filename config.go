@@ -12,8 +12,8 @@ type Lease struct {
 }
 
 type GlobalConfig struct {
-	DNS1, DNS2    string
-	Router        string
+	DNS1, DNS2 string
+	//	Router        string
 	Lease         Lease
 	Authoritative string
 }
@@ -26,6 +26,6 @@ type SubnetConfig struct {
 }
 
 type IPRange struct {
-	Initial int
-	Final   int
+	Initial string
+	Final   string
 }

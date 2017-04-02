@@ -1,20 +1,19 @@
 package admin
 
-var knownHost = `
-host {{.Host}}  {
-  hardware ethernet {{.MAC}};
-  fixed-address {{.IP}};
+var KnownHostTmpl = `
+host 	{{.Host}}	{
+  hardware ethernet	{{.MAC}};
+  fixed-address 	{{.IP}};
 }
 `
-var globalConf = `
-option domain-name-servers  {{.DNS1}} {{.DNS2}};
-option routers              {{.Router}};
-default-lease-time          {{.Lease.Default}};
-max-lease-time              {{.Lease.Max}};
+var GlobalTmpl = `
+option	 domain-name-servers  	{{.DNS1}} {{.DNS2}};
+default-lease-time          	{{.Lease.Default}};
+max-lease-time              	{{.Lease.Max}};
 {{.Authoritative}};
 `
 
-var subnetConf = `
+var SubnetTmpl = `
 subnet  {{.Subnet}} netmask {{.Netmask}}  {
   pool  {
     range {{.Unknown.Initial}}  {{.Unknown.Final}};
