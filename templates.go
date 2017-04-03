@@ -7,7 +7,7 @@ host 	{{.Host}}	{
 }
 `
 var GlobalTmpl = `
-option	 domain-name-servers  	{{.DNS1}} {{.DNS2}};
+option	 domain-name-servers  	{{.DNS1}},{{.DNS2}};
 default-lease-time          	{{.Lease.Default}};
 max-lease-time              	{{.Lease.Max}};
 {{.Authoritative}};
