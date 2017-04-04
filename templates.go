@@ -15,6 +15,7 @@ max-lease-time              	{{.Lease.Max}};
 
 var SubnetTmpl = `
 subnet  {{.Subnet}} netmask {{.Netmask}}  {
+  deny duplicates;
   pool  {
     range {{.Unknown.Initial}}  {{.Unknown.Final}};
     allow unknown-clients;

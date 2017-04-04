@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"text/template"
+	"time"
 
 	"github.com/thewraven/dhcpd-admin"
 	leases "github.com/thewraven/dhcpd-leases"
@@ -17,6 +18,7 @@ const leasesFile = "/var/lib/dhcp/dhcpd.leases"
 
 var (
 	globalTmpl, subnetTmpl, knownHostTmpl *template.Template
+	logFile                               string
 )
 
 func checkError(err error) {
@@ -111,6 +113,59 @@ func (ws *webServer) getStatus(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (ws *webServer) watchLeases(every time.Duration, logFile string) {
+	go func() {
+		for {
+			select {
+			case <-time.After(every):
+				fmt.Println("*****************	writing into log...")
+				ws.dumpLeases(logFile)
+			}
+
+		}
+	}()
+}
+
+func (ws webServer) dumpLeases(logFile string) {
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_WRONLY, 600)
+
+	if err != nil {
+		fmt.Println("cannot write log:", err)
+		return
+	}
+	defer f.Close()
+	/*	stats, err := f.Stat()
+		if err != nil {
+			fmt.Println("cannot read stats:", err)
+			return
+		}
+		_, err = f.Seek(0, int(stats.Size()))
+		if err != nil {
+			fmt.Println("cannot seek:", err)
+			return
+		}*/
+	encoder := json.NewEncoder(f)
+	leaseFile, err := os.Open(leasesFile)
+	if err != nil {
+		fmt.Println("cannot read leases file:", err)
+		return
+	}
+	defer leaseFile.Close()
+	leases, err := leases.ParseLeases(leaseFile)
+	if err != nil {
+		fmt.Println("cannot parse leases", err)
+		return
+	}
+	err = encoder.Encode(map[string]interface{}{
+		"active": leases,
+		"time":   time.Now(),
+	})
+	if err != nil {
+		fmt.Println("cannot write in file:", err)
+		return
+	}
+}
+
 type Config struct {
 	Global  admin.GlobalConfig
 	Hosts   []admin.HostConfig
@@ -160,6 +215,7 @@ func main() {
 	mux.HandleFunc("/status", ws.getStatus)
 	mux.HandleFunc("/update", ws.updateParams)
 	mux.HandleFunc("/leases", ws.parseLeases)
+	ws.watchLeases(time.Second*10, "dhcpd.log")
 	server := http.Server{}
 	server.Addr = ":9000"
 	server.Handler = mux
